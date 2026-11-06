@@ -1,55 +1,20 @@
-import csv
+from itertools import combinations
+
 import matplotlib.pyplot as plt
-import pandas as pd
-
 import miary_statystyczne
-
-
-def fmt(val):
-    return f"{val:.2f}".replace(".", ",")
-
-
-def rysowanie_histogramu(ax, dane, k, xPodpis, yPodpis, tytul, zakres=None):
-    if zakres is not None:
-        minimum, maksimum = zakres
-    else:
-        minimum = min(dane)
-        maksimum = max(dane)
-
-    szerokosc = (maksimum - minimum) / k
-    podzialka = [minimum + i * szerokosc for i in range(k + 1)]
-
-    licznosci = [0] * k
-    for x in dane:
-        indeks = int((x - minimum) / szerokosc)
-        if indeks >= k:
-            indeks = k - 1
-        elif indeks < 0:
-            indeks = 0
-        licznosci[indeks] += 1
-
-    granice = [minimum + i * szerokosc for i in range(k)]
-
-    ax.bar(granice, licznosci, width=szerokosc, align="edge", edgecolor="black")
-
-    # Formatowanie podziałki, żeby uniknąć długich ułamków typu 0.3125
-    ax.set_xticks(podzialka)
-    ax.set_xticklabels([f"{val:.2f}".rstrip('0').rstrip('.') if val % 0.5 != 0 else f"{val:.1f}" for val in podzialka])
-
-    ax.set_xlabel(xPodpis)
-    ax.set_ylabel(yPodpis)
-    ax.set_title(tytul)
-
-    # Automatyczne dopasowanie wysokości osi Y z lekkim zapasem nad najwyższym słupkiem
-    ax.set_ylim(0, max(licznosci) + 4)
-
-def rysowanie_pudelkowego(ax, x, y, z, yPodpis):
-    ax.boxplot([x, y, z], tick_labels=["setosa", "versicolor", "virginica"])  #[cite: 1]
-    ax.set_ylabel(yPodpis)  #[cite: 1]
-    ax.set_xlabel("Gatunek")  #[cite: 1]
+import pandas as pd
 
 
 def main():
+    plt.rcParams.update(
+        {
+            "font.size": 11,
+            "axes.titlesize": 14,
+            "axes.labelsize": 12,
+            "xtick.labelsize": 11,
+            "ytick.labelsize": 11,
+        }
+    )
     df = pd.read_csv(
         "data1.csv",
         header=None,
@@ -62,50 +27,80 @@ def main():
         ],
     )
 
-    print(
-        f"Setosa: {(df['Gatunek'] == 0).sum()}\n"
-        f"Versicolor: {(df['Gatunek'] == 1).sum()}\n"
-        f"Virginica: {(df['Gatunek'] == 2).sum()}\n"
+    df["Gatunek"] = df["Gatunek"].map(
+        {
+            0: "setosa",
+            1: "versicolor",
+            2: "virginica",
+        }
     )
 
-    # Konfiguracja podpisów osi i zakresów dla poszczególnych cech
-    konfiguracja = [
-        ("Długość działki kielicha", "Długość (cm)", (4.0, 8.0)),
-        ("Szerokość działki kielicha", "Szerokość (cm)", (2.0, 4.4)),
-        ("Długość płatka", "Długość (cm)", (1.0, 7.0)),
-        ("Szerokość płatka", "Szerokość (cm)", (0.0, 2.5)),
+    print(df["Gatunek"].value_counts())
+
+    dane = [
+        "Długość działki kielicha",
+        "Szerokość działki kielicha",
+        "Długość płatka",
+        "Szerokość płatka",
     ]
 
-    # Tworzenie siatki 4 wiersze x 2 kolumny
-    fig, axes = plt.subplots(4, 2, figsize=(8, 10))
+    dupa = pd.DataFrame(
+        index=dane,
+        columns=[
+            "Minimum",
+            "Śr. arytm. (± odch. stand.)",
+            "Mediana (Q1 - Q3)",
+            "Maksimum",
+        ],
+    )
 
-    for i, (kolumna, podpis_osi, zakres) in enumerate(konfiguracja):
-        dane = df[kolumna]
+    for x in dupa.index:
+        dupa.loc[x] = [
+            min(df[x]),
+            f"{miary_statystyczne.srednia_arytmetyczna(df[x]):.2f} ± {miary_statystyczne.odchylenie_standardowe(df[x]):.2f}",
+            f"{miary_statystyczne.mediana(df[x])} ({miary_statystyczne.kwartyle(df[x])})",
+            max(df[x]),
+        ]
 
-        print(
-            f"{kolumna}:\t\t"
-            f"{min(dane):.2f}\t"
-            f"{miary_statystyczne.srednia_arytmetyczna(dane):.2f} ± ({miary_statystyczne.odchylenie_standardowe(dane):.2f})\t"
-            f"{miary_statystyczne.mediana(dane):.2f} {miary_statystyczne.kwartyle(dane)}\t"
-            f"{max(dane):.2f}"
+    print(dupa.to_markdown(tablefmt="grid"))
+
+    fig, axes = plt.subplots(4, 2, figsize=(12, 14))
+
+    for x in range(4):
+        # Histogram
+        axes[x][0].hist(df[dane[x]], bins=8, edgecolor="black")
+        axes[x][0].set(
+            title=dane[x],
+            xlabel="Długość (cm)" if "Długość" in dane[x] else "Szerokość (cm)",
+            ylabel="Liczebność",
         )
 
-        # Podział danych na 3 gatunki do wykresu pudełkowego
-        setosa = df[df["Gatunek"] == 0][kolumna]
-        versicolor = df[df["Gatunek"] == 1][kolumna]
-        virginica = df[df["Gatunek"] == 2][kolumna]
-
-        # Lewa kolumna (indeks 0): Histogram
-        rysowanie_histogramu(
-            axes[i, 0], dane, 8, podpis_osi, "Liczebność", kolumna, zakres=zakres
+        # Boxplot
+        df.boxplot(column=dane[x], by="Gatunek", ax=axes[x][1])
+        axes[x][1].set(
+            title="",
+            xlabel="Gatunek",
+            ylabel="Długość (cm)" if "Długość" in dane[x] else "Szerokość (cm)",
         )
 
-        # Prawa kolumna (indeks 1): Wykres pudełkowy
-        rysowanie_pudelkowego(
-            axes[i, 1], setosa, versicolor, virginica, podpis_osi
+    plt.suptitle("")
+    plt.tight_layout(h_pad=2, w_pad=2)
+    plt.show()
+
+    fig, axes = plt.subplots(3, 2, figsize=(12, 14))
+
+    for ax, (x, y) in zip(axes.flat, combinations(dane, 2)):
+        a, b = miary_statystyczne.regresjaLiniowa(df[x], df[y])
+
+        ax.scatter(df[x], df[y], s=10, alpha=0.5)
+        ax.plot(df[x], a * df[x] + b, color="red")
+
+        ax.set(
+            xlabel=x,
+            ylabel=y,
+            title=f"r = {miary_statystyczne.pearson(df[x], df[y]):.2f} y={a:+.2f}*x + {b:+.2f}",
         )
 
-    # Automatyczne dopasowanie odstępów między wykresami, aby napisy na siebie nie nachodziły
     plt.tight_layout()
     plt.show()
 
