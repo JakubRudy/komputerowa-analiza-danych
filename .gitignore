@@ -1,5 +1,13 @@
 .idea
 .DS_Store
+*.pyc
+*.aux
+*.latexmk
+*.log
+*.toc
+*.gz
+*.fdb_latexmk
+*.fls
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

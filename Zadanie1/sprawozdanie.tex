@@ -1,0 +1,69 @@
+
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage{lmodern}
+\usepackage{geometry}
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+\geometry{margin=2.5cm}
+
+\title{Sprawozdanie z analizy danych}
+\author{Jakub Muszka}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Liczności gatunków irysów}
+
+\begin{table}[htbp]
+    \centering
+    \caption{Liczebność poszczególnych gatunków irysów}
+    \label{tab:wyniki}
+    \begin{tabular}{|c|c|}
+        \hline
+        Gatunek & Liczebność(\%) \\
+        \hline
+        Setosa & 50(33.33\%) \\
+        Versicolor & 50(33.33\%) \\
+        Virginica & 50(33.33\%) \\
+        Razem & 150(100\%) \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section{Miary rozkładu cech irysów}
+
+\begin{table}
+    \caption{Miary rozkładu dla cech irysów}
+    \label{tab:miary}
+    \resizebox{\textwidth}{!}{
+    \begin{tabular}{|c|c|c|c|c|c|}
+        \hline
+        Cecha & Minimum & Śr. arytm. (± odch. stand.) & Mediana (Q1 - Q3) & Maksimum \\
+        \hline
+        Długość działki kielicha & 4.3 & 5.84 ± 0.83 & 5.8 ((5.1, 6.4)) & 7.9 \\
+        Szerokość działki kielicha & 2 & 3.06 ± 0.44  & 3.0 ((2.8, 3.3)) & 4.4 \\
+        Długość płatka & 1 & 3.76 ± 1.77 & 4.35 ((1.6, 5.1)) & 6.9 \\
+        Szerokość płatka & 0.1 & 1.20 ± 0.76  & 1.3 ((0.3, 1.8))  & 2.5 \\
+        \hline
+    \end{tabular}
+    }
+\end{table}
+
+\section{Charakterystyka rozkładu cech irysów}
+
+\section{Współzależności pomiędzy cechami irysów}
+
+
+
+
+\end{document}
