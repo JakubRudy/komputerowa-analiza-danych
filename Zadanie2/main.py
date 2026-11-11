@@ -1,11 +1,7 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 import random
-import math
-
 from itertools import combinations
+
+import pandas as pd
 
 kolumny = ["długość działki kielicha", "szerokość działki kielicha", "długość płatka", "szerokość płatka"]
 
@@ -13,25 +9,24 @@ df = pd.read_csv('data2.csv', header=None, names=kolumny)
 
 wynik = []
 
+liczba_klastrow = int(input("Podaj liczbe klastrów mistrzu: "))
+if liczba_klastrow <= 0:
+    raise ValueError(f"Liczba klastrów musi być większa niż 0, a podałeś {liczba_klastrow}!")
+
+def center_init(minimum, maksimum):
+    return random.uniform(minimum, maksimum)
+
 for x, y in combinations(kolumny, 2):
-    center1 = (
-        random.uniform(df[x].min(), df[x].max()),
-        random.uniform(df[y].min(), df[y].max())
-    )
+    centroidy = []
 
-    center2 = (
-        random.uniform(df[x].min(), df[x].max()),
-        random.uniform(df[y].min(), df[y].max())
-    )
+    maksimum_x = df[x].max()
+    minimum_x = df[x].min()
 
-    center3 = (
-        random.uniform(df[x].min(), df[x].max()),
-        random.uniform(df[y].min(), df[y].max())
-    )
+    maksimum_y = df[y].max()
+    minimum_y = df[y].min()
 
-    nowy_jeden = ()
-    nowy_dwa = ()
-    nowy_trzy = ()
+    for i in range (liczba_klastrow):
+        centroidy.append((center_init(maksimum_x, minimum_x), center_init(maksimum_y, minimum_y)))
 
     dupa = pd.DataFrame({
         x: df[x],
@@ -41,54 +36,47 @@ for x, y in combinations(kolumny, 2):
 
     while (True):
 
-        klastryx = [0, 0, 0]
-        klastryy = [0, 0, 0]
-        liczebnosc = [0, 0, 0]
+        klastry_x = []
+        klastry_y = []
+        liczebnosc = []
+        WCSS = 0
+
+        for i in range(liczba_klastrow):
+            klastry_x.append(0)
+            klastry_y.append(0)
+            liczebnosc.append(0)
+
 
         for i in dupa.index:
             odlegolsc = []
 
-            odlegolsc.append((dupa.loc[i, x] - center1[0]) ** 2 + (dupa.loc[i, y] - center1[1]) ** 2)
-            odlegolsc.append((dupa.loc[i, x] - center2[0]) ** 2 + (dupa.loc[i, y] - center2[1]) ** 2)
-            odlegolsc.append((dupa.loc[i, x] - center3[0]) ** 2 + (dupa.loc[i, y] - center3[1]) ** 2)
+            for j in range(liczba_klastrow):
+                odlegolsc.append((dupa.loc[i, x] - centroidy[j][0]) ** 2 + (dupa.loc[i, y] - centroidy[j][1]) ** 2)
 
             dupa.loc[i, "klaster"] = odlegolsc.index(min(odlegolsc))
+            WCSS += min(odlegolsc)
 
-            klastryx[odlegolsc.index(min(odlegolsc))] += dupa.loc[i, x]
-            klastryy[odlegolsc.index(min(odlegolsc))] += dupa.loc[i, y]
+            klastry_x[odlegolsc.index(min(odlegolsc))] += dupa.loc[i, x]
+            klastry_y[odlegolsc.index(min(odlegolsc))] += dupa.loc[i, y]
 
             liczebnosc[odlegolsc.index(min(odlegolsc))] += 1
 
-        if liczebnosc[0] == 0:
-            nowy_jeden = center1
-        else:
-            nowy_jeden = (
-                klastryx[0] / liczebnosc[0],
-                klastryy[0] / liczebnosc[0],
-            )
+        nowe = []
 
-        if liczebnosc[1] == 0:
-            nowy_dwa = center2
-        else:
-            nowy_dwa = (
-                klastryx[1] / liczebnosc[1],
-                klastryy[1] / liczebnosc[1],
-            )
+        for i in range(liczba_klastrow):
+            if liczebnosc[i] == 0:
+                nowe.append(centroidy[i])
+            else:
+                nowe.append((
+                    klastry_x[i] / liczebnosc[i],
+                    klastry_y[i] / liczebnosc[i],
+                ))
 
-        if liczebnosc[2] == 0:
-            nowy_trzy = center3
-        else:
-            nowy_trzy = (
-                klastryx[2] / liczebnosc[2],
-                klastryy[2] / liczebnosc[2],
-            )
-
-        if center1 == nowy_jeden and center2 == nowy_dwa and center3 == nowy_trzy:
+        if centroidy == nowe:
+            print(f"WCSS: {WCSS}\n")
             break
 
-        center1 = nowy_jeden
-        center2 = nowy_dwa
-        center3 = nowy_trzy
+        centroidy = nowe
 
     wynik.append(dupa)
 

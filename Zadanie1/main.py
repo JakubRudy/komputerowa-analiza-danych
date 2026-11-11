@@ -97,7 +97,7 @@ def main():
     plt.tight_layout(h_pad=2, w_pad=2)
     plt.show()
 
-    # Wykresy punktowe i regresja liniowa
+    # Regresja liniowa
     fig, axes = plt.subplots(3, 2, figsize=(12, 14))
 
     for ax, (x, y) in zip(axes.flat, combinations(dane, 2)):
