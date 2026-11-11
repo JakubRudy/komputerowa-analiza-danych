@@ -15,6 +15,7 @@ def main():
             "ytick.labelsize": 11,
         }
     )
+
     df = pd.read_csv(
         "data1.csv",
         header=None,
@@ -44,7 +45,7 @@ def main():
         "Szerokość płatka",
     ]
 
-    dupa = pd.DataFrame(
+    baza = pd.DataFrame(
         index=dane,
         columns=[
             "Minimum",
@@ -54,15 +55,15 @@ def main():
         ],
     )
 
-    for x in dupa.index:
-        dupa.loc[x] = [
+    for x in baza.index:
+        baza.loc[x] = [
             min(df[x]),
             f"{miary_statystyczne.srednia_arytmetyczna(df[x]):.2f} ± {miary_statystyczne.odchylenie_standardowe(df[x]):.2f}",
             f"{miary_statystyczne.mediana(df[x])} ({miary_statystyczne.kwartyle(df[x])})",
             max(df[x]),
         ]
 
-    print(dupa.to_markdown(tablefmt="grid"))
+    print(baza.to_markdown(tablefmt="grid"))
 
     fig, axes = plt.subplots(4, 2, figsize=(12, 14))
 
@@ -76,7 +77,16 @@ def main():
         )
 
         # Boxplot
-        df.boxplot(column=dane[x], by="Gatunek", ax=axes[x][1])
+        df.boxplot(
+            column=dane[x],
+            by="Gatunek",
+            ax=axes[x][1],
+            grid=False,
+            medianprops={"color": "gray"},
+        )
+
+        axes[x][1].grid(axis="y", alpha=0.35)
+
         axes[x][1].set(
             title="",
             xlabel="Gatunek",
@@ -87,21 +97,22 @@ def main():
     plt.tight_layout(h_pad=2, w_pad=2)
     plt.show()
 
+    # Wykresy punktowe i regresja liniowa
     fig, axes = plt.subplots(3, 2, figsize=(12, 14))
 
     for ax, (x, y) in zip(axes.flat, combinations(dane, 2)):
-        a, b = miary_statystyczne.regresjaLiniowa(df[x], df[y])
+        a, b = miary_statystyczne.regresja_liniowa(df[x], df[y])
 
-        ax.scatter(df[x], df[y], s=10, alpha=0.5)
-        ax.plot(df[x], a * df[x] + b, color="red")
+        ax.scatter(df[x], df[y], s=7, alpha=0.6)
+        ax.plot(df[x], a * df[x] + b, color="red", linewidth=1.5)
 
         ax.set(
             xlabel=x,
             ylabel=y,
-            title=f"r = {miary_statystyczne.pearson(df[x], df[y]):.2f} y={a:+.2f}*x + {b:+.2f}",
+            title=f"r = {miary_statystyczne.pearson(df[x], df[y]):.2f}; y = {a:.2f}x {b:+.2f}",
         )
 
-    plt.tight_layout()
+    plt.tight_layout(h_pad=2.5, w_pad=2.5)
     plt.show()
 
 
